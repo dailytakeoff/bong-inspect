@@ -51,18 +51,6 @@ jobs:
           grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:|SHOT at|CREEPER|OpenGL renderer|OpenGL core profile version|direct rendering|Loaded bong)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
           msg=$(sed -e 's/%/%25/g' gerrors.txt | awk '{printf "%s%%0A", $0}')
           [ -s gerrors.txt ] && echo "::warning title=Game log::${msg:0:60000}" || true
-      - name: API dump (temporary)
-        if: always()
-        run: |
-          JARS=$(find ~/.gradle/caches .gradle -name '*.jar' -path '*minecraft*' 2>/dev/null | grep -v -e sources -e fabric-api -e fabric-loader | sort -u)
-          { echo "JARS:"; echo "$JARS"; } > api.txt
-          CP=$(echo "$JARS" | tr '\n' ':')
-          for j in $JARS; do unzip -l "$j" 2>/dev/null | grep -i -E 'entity/EntityType[^/]*\.class|/BuiltInRegistries\.class' ; done | sort -u >> api.txt
-          for c in net.minecraft.world.entity.EntityTypes net.minecraft.core.registries.BuiltInRegistries; do
-            echo "=== $c" >> api.txt
-            javap -cp "$CP" "$c" 2>&1 | grep -i -E 'creeper|ENTITY_TYPE|class|error' >> api.txt || true
-          done
-          wc -l api.txt
       - name: Save jar and screenshots to the ci-out branch
         if: always() && github.event_name != 'pull_request'
         run: |
@@ -70,7 +58,6 @@ jobs:
           cp build/libs/*.jar /tmp/out/ 2>/dev/null || true
           find . -path ./node_modules -prune -o -name '*.png' -path '*screenshots*' -print -exec cp {} /tmp/out/screenshots/ \; || true
           cp gametest.log /tmp/out/ 2>/dev/null || true
-          cp api.txt /tmp/out/ 2>/dev/null || true
           # main's builds go to ci-out; other branches to ci-out-<branch>, so they don't overwrite main's jar
           BR=ci-out
           [ "${GITHUB_REF_NAME}" != main ] && BR="ci-out-${GITHUB_REF_NAME//\//-}"
