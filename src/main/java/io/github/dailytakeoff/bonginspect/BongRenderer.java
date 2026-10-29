@@ -43,7 +43,7 @@ public final class BongRenderer {
 	private static final Supplier<ModelPart> SLIM = Suppliers.memoize(() -> bakeArms(true));
 
 	/** Where the hand grips: on the tube, as a fraction of the bong's height. */
-	private static final float GRIP_HEIGHT = 0.53f;
+	private static final float GRIP_HEIGHT = 0.45f;
 
 	private BongRenderer() {
 	}
