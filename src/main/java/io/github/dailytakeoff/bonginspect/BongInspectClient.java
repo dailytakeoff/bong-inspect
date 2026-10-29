@@ -36,17 +36,22 @@ public final class BongInspectClient implements ClientModInitializer {
 				if (mc.player != null && mc.gui.screen() == null) {
 					if (!BongAnimation.active()) {
 						Ambience.afterHit();
+						AmbientSounds.afterEmote();
 					}
 					BongAnimation.start(BongAnimation.Mode.HIT);
 				}
 			}
 			while (inspectKey.consumeClick()) {
 				if (mc.player != null && mc.gui.screen() == null) {
+					if (!BongAnimation.active()) {
+						AmbientSounds.afterEmote();
+					}
 					BongAnimation.start(BongAnimation.Mode.INSPECT);
 				}
 			}
 			BongAnimation.tick(mc);
 			Ambience.tick(mc);
+			AmbientSounds.tick(mc);
 		});
 	}
 }

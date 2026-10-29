@@ -3,6 +3,7 @@ package io.github.dailytakeoff.bonginspect.test;
 import io.github.dailytakeoff.bonginspect.BongAnimation;
 import io.github.dailytakeoff.bonginspect.BongInspectClient;
 import io.github.dailytakeoff.bonginspect.Ambience;
+import io.github.dailytakeoff.bonginspect.AmbientSounds;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
@@ -83,6 +84,16 @@ public class AnimationScreenshots implements FabricClientGameTest {
 			ctx.waitTicks(5);
 			ctx.runOnClient(mc -> BongInspectClient.LOGGER.info("CREEPER after: {}", Ambience.debugState()));
 			ctx.takeScreenshot("creeper_4_fizzled");
+
+			// knocking and a door (sound only: just checks they run through without errors)
+			ctx.runOnClient(mc -> {
+				AmbientSounds.knockNow();
+				AmbientSounds.doorNow();
+			});
+			ctx.waitTicks(3);
+			ctx.runOnClient(mc -> BongInspectClient.LOGGER.info("SOUNDS started: {}", AmbientSounds.debugState()));
+			ctx.waitTicks(60);
+			ctx.runOnClient(mc -> BongInspectClient.LOGGER.info("SOUNDS after: {}", AmbientSounds.debugState()));
 		}
 	}
 }
