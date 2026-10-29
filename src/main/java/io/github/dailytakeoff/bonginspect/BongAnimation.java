@@ -143,7 +143,7 @@ public final class BongAnimation {
 	// ------------------------------------------------------------------ frame for rendering
 
 	/** What the renderer needs for one frame. milkTop/milkBottom are heights (0..1) of the smoke in the chamber. */
-	public record Frame(Pose pose, float milkBottom, float milkTop, float milkAlpha) {
+	public record Frame(Pose pose, float milkBottom, float milkTop, float milkAlpha, float ember) {
 	}
 
 	public static Frame frame(float partial) {
@@ -180,7 +180,13 @@ public final class BongAnimation {
 			bottom = t < CLEAR_START ? 0.12f : Mth.lerp(ease(Mth.clamp((t - CLEAR_START) / (CLEAR_END - CLEAR_START), 0, 1)), 0.12f, 1.1f);
 			alpha = 0.6f;
 		}
-		return new Frame(pose, bottom, top, alpha);
+		// the bowl glows while it's lit (lighter on at LIGHT, burns until the clear)
+		float ember = 0;
+		if (mode == Mode.HIT && t >= LIGHT) {
+			float fade = t < CLEAR_START ? 1 : 1 - Mth.clamp((t - CLEAR_START) / 0.6f, 0, 1);
+			ember = Mth.clamp((t - LIGHT) / 0.15f, 0, 1) * fade * (0.75f + 0.25f * Mth.sin(t * 23f));
+		}
+		return new Frame(pose, bottom, top, alpha, ember);
 	}
 
 	/** CS:GO-style look-over: turn it all the way round, tilting to show both sides. */

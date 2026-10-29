@@ -187,7 +187,7 @@ public final class BongRenderer {
 				int base = t * 24;
 				boolean any = false;
 				for (int k = 0; k < 3; k++) {
-					col[k] = inside(v[base + k * 8 + 1], f);
+					col[k] = inside(v[base + k * 8], v[base + k * 8 + 1], f);
 					any |= (col[k] >>> 24) > 2;
 				}
 				if (!any) {
@@ -199,13 +199,17 @@ public final class BongRenderer {
 					float s = 0.004f;
 					buf.addVertex(m, v[o] - v[o + 3] * s, v[o + 1] - v[o + 4] * s, v[o + 2] - v[o + 5] * s)
 							.setColor(col[kk]).setUv(WHITE_U, WHITE_V)
-							.setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, v[o + 3], v[o + 4], v[o + 5]);
+							.setOverlay(OverlayTexture.NO_OVERLAY).setLight((col[kk] & 0xFFFFFF) == 0xFF7A1E ? LightCoordsUtil.FULL_BRIGHT : light).setNormal(pose, v[o + 3], v[o + 4], v[o + 5]);
 				}
 			}
 		}
 
 		/** ARGB of what's inside the glass at height y (0 = base, 1 = tip). */
-		private static int inside(float y, BongAnimation.Frame f) {
+		private static int inside(float x, float y, BongAnimation.Frame f) {
+			if (f.ember() > 0 && x < -0.17f && y > 0.35f) {
+				// burning bowl
+				return argb(f.ember() * Mth.clamp((y - 0.35f) / 0.012f, 0, 1), 0xFF7A1E);
+			}
 			if (y < WATER_LINE) {
 				float a = 0.30f * Mth.clamp((WATER_LINE - y) / 0.015f, 0, 1);
 				return argb(a, 0x6FB7DE);
