@@ -10,7 +10,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.phys.Vec3;
@@ -125,7 +125,7 @@ public final class CreeperScare {
 		spot = standing != null ? standing : target;
 
 		if (standing != null) {
-			Creeper c = new Creeper(EntityType.CREEPER, level);
+			Creeper c = new Creeper(EntityTypes.CREEPER, level);
 			c.setId(FAKE_ID);
 			// it makes no sounds of its own: every sound comes from here
 			c.setSilent(true);

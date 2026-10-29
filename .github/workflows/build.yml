@@ -57,12 +57,10 @@ jobs:
           JARS=$(find ~/.gradle/caches .gradle -name '*.jar' -path '*minecraft*' 2>/dev/null | grep -v -e sources -e fabric-api -e fabric-loader | sort -u)
           { echo "JARS:"; echo "$JARS"; } > api.txt
           CP=$(echo "$JARS" | tr '\n' ':')
-          for j in $JARS; do unzip -l "$j" 2>/dev/null | grep -i -E 'Creeper[^/]*\.class|/ClientLevel\.class|/SoundType\.class' ; done | sort -u >> api.txt
-          for c in net.minecraft.world.entity.monster.Creeper net.minecraft.client.multiplayer.ClientLevel net.minecraft.world.entity.Entity \
-                   net.minecraft.world.entity.LivingEntity net.minecraft.world.level.block.SoundType net.minecraft.world.phys.shapes.VoxelShape \
-                   'net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase' net.minecraft.world.entity.EntityType net.minecraft.core.BlockPos; do
+          for j in $JARS; do unzip -l "$j" 2>/dev/null | grep -i -E 'entity/EntityType[^/]*\.class|/BuiltInRegistries\.class' ; done | sort -u >> api.txt
+          for c in net.minecraft.world.entity.EntityTypes net.minecraft.core.registries.BuiltInRegistries; do
             echo "=== $c" >> api.txt
-            javap -cp "$CP" "$c" >> api.txt 2>&1 || true
+            javap -cp "$CP" "$c" 2>&1 | grep -i -E 'creeper|ENTITY_TYPE|class|error' >> api.txt || true
           done
           wc -l api.txt
       - name: Save jar and screenshots to the ci-out branch
