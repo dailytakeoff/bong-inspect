@@ -48,7 +48,7 @@ jobs:
       - name: Report game errors as annotations
         if: always()
         run: |
-          grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:|OpenGL renderer|OpenGL core profile version|direct rendering|Loaded bong)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
+          grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:|SHOT at|OpenGL renderer|OpenGL core profile version|direct rendering|Loaded bong)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
           msg=$(sed -e 's/%/%25/g' gerrors.txt | awk '{printf "%s%%0A", $0}')
           [ -s gerrors.txt ] && echo "::warning title=Game log::${msg:0:60000}" || true
       - name: Save jar and screenshots to the ci-out branch

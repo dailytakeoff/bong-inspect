@@ -34,8 +34,6 @@ public final class BongAnimation {
 	static final Pose HIDDEN = new Pose(0.62f, -1.25f, -0.95f, -18, 28, 35);
 	static final Pose READY = new Pose(0.40f, -0.24f, -1.0f, 8, 10, 35);
 	static final Pose MOUTH = mouthPose(79, 20, -35);
-	// inspect: brought a bit closer and toward the middle of the screen
-	private static final Vector3f INSPECT_SHIFT = new Vector3f(-0.15f, 0.07f, 0.13f);
 
 	// HIT timeline (seconds)
 	private static final float RAISE = 0.35f;
@@ -55,6 +53,11 @@ public final class BongAnimation {
 	private static int age = -1;
 
 	private BongAnimation() {
+	}
+
+	/** Ticks since the key press (-1 when idle). */
+	public static int age() {
+		return age;
 	}
 
 	public static boolean active() {
@@ -119,24 +122,25 @@ public final class BongAnimation {
 		}
 	}
 
-	/** Blow campfire smoke out of the mouth, strong at first and tapering off. */
+	/** Blow campfire smoke out of the mouth: a stream that drifts away, strong at first and tapering off. */
 	private static void exhale(Minecraft mc, LocalPlayer player, float progress, ThreadLocalRandom r) {
 		Vec3 look = player.getViewVector(1f);
 		Vec3 eye = player.getEyePosition();
-		Vec3 mouth = eye.add(0, -0.18, 0).add(look.scale(0.45));
 		float strength = 1f - progress;
-		int count = progress < 0.6f ? 3 : 1 + (r.nextFloat() < strength ? 1 : 0);
+		// campfire smoke particles are big; starting them about a block out keeps them from filling the screen
+		Vec3 mouth = eye.add(0, -0.25, 0).add(look.scale(1.05));
+		int count = progress < 0.5f ? 1 + (r.nextFloat() < 0.5f ? 1 : 0) : (r.nextFloat() < strength * 1.4f ? 1 : 0);
 		for (int i = 0; i < count; i++) {
-			double speed = 0.018 + 0.03 * strength + r.nextDouble() * 0.012;
-			double jx = (r.nextDouble() - 0.5) * 0.012;
+			double speed = 0.035 + 0.045 * strength + r.nextDouble() * 0.015;
+			double jx = (r.nextDouble() - 0.5) * 0.014;
 			double jy = (r.nextDouble() - 0.5) * 0.008;
-			double jz = (r.nextDouble() - 0.5) * 0.012;
-			double ox = (r.nextDouble() - 0.5) * 0.1;
-			double oy = (r.nextDouble() - 0.5) * 0.06;
-			double oz = (r.nextDouble() - 0.5) * 0.1;
+			double jz = (r.nextDouble() - 0.5) * 0.014;
+			double ox = (r.nextDouble() - 0.5) * 0.14;
+			double oy = (r.nextDouble() - 0.5) * 0.08;
+			double oz = (r.nextDouble() - 0.5) * 0.14;
 			mc.level.addParticle(ParticleTypes.CAMPFIRE_COSY_SMOKE,
 					mouth.x + ox, mouth.y + oy, mouth.z + oz,
-					look.x * speed + jx, look.y * speed + 0.006 + jy, look.z * speed + jz);
+					look.x * speed + jx, look.y * speed + 0.008 + jy, look.z * speed + jz);
 		}
 	}
 
@@ -189,25 +193,26 @@ public final class BongAnimation {
 		return new Frame(pose, bottom, top, alpha, ember);
 	}
 
-	/** CS:GO-style look-over: turn it all the way round, tilting to show both sides. */
+	// inspect keyframes: fraction of the inspect, then the pose. Brought toward the middle of the screen,
+	// tipped over to show the top and bowl, flipped to the other side, then back.
+	private static final float[] INSPECT_AT = {0f, 0.28f, 0.44f, 0.74f, 1f};
+	private static final Pose[] INSPECT_KEYS = {
+			READY,
+			new Pose(0.19f, -0.15f, -0.84f, 26, 34, READY.spin + 120),
+			new Pose(0.18f, -0.13f, -0.83f, 28, 30, READY.spin + 160),
+			new Pose(0.25f, -0.17f, -0.86f, 0, -24, READY.spin + 300),
+			new Pose(READY.x, READY.y, READY.z, READY.pitch, READY.roll, READY.spin + 360),
+	};
+
+	/** CS:GO-style look-over between the keyframes above. */
 	private static Pose inspect(float u) {
-		float spin;
-		if (u < 0.45f) {
-			spin = 180 * ease(u / 0.45f);
-		} else if (u < 0.55f) {
-			spin = 180;
-		} else {
-			spin = 180 + 180 * ease((u - 0.55f) / 0.45f);
+		for (int i = 1; i < INSPECT_AT.length; i++) {
+			if (u <= INSPECT_AT[i]) {
+				float k = (u - INSPECT_AT[i - 1]) / (INSPECT_AT[i] - INSPECT_AT[i - 1]);
+				return Pose.lerp(INSPECT_KEYS[i - 1], INSPECT_KEYS[i], ease(k));
+			}
 		}
-		float bump = Mth.sin(u * Mth.PI);
-		float wobble = Mth.sin(u * Mth.PI * 2);
-		return new Pose(
-				READY.x + INSPECT_SHIFT.x * bump,
-				READY.y + INSPECT_SHIFT.y * bump,
-				READY.z + INSPECT_SHIFT.z * bump,
-				READY.pitch + 14 * bump,
-				READY.roll - 16 * bump + 8 * wobble,
-				READY.spin + spin);
+		return INSPECT_KEYS[INSPECT_KEYS.length - 1];
 	}
 
 	private static float ease(float x) {

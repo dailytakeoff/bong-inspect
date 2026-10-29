@@ -214,8 +214,8 @@ public final class BongRenderer {
 				float a = 0.30f * Mth.clamp((WATER_LINE - y) / 0.015f, 0, 1);
 				return argb(a, 0x6FB7DE);
 			}
-			if (f.milkAlpha() <= 0) {
-				return 0;
+			if (f.milkAlpha() <= 0 || x < -0.13f) {
+				return 0; // no smoke in the bowl/downstem, only the chamber and tube
 			}
 			float a = f.milkAlpha()
 					* Mth.clamp((f.milkTop() - y) / 0.06f, 0, 1)

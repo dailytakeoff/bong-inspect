@@ -38,6 +38,7 @@ public class AnimationScreenshots implements FabricClientGameTest {
 			for (int tick : HIT_TICKS) {
 				ctx.waitTicks(tick - at);
 				at = tick;
+				ctx.runOnClient(mc -> BongInspectClient.LOGGER.info("SHOT at animation tick {}", BongAnimation.age()));
 				ctx.takeScreenshot(String.format("hit_%03d", tick));
 			}
 			ctx.waitTicks(30);
