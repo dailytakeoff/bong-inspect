@@ -1,0 +1,63 @@
+# Builds the mod on every push, then starts the game in a virtual screen,
+# plays the animation and saves screenshots. Jar + screenshots go to the ci-out branch.
+name: build
+on: [push, workflow_dispatch]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Build mod
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          ./gradlew build --no-daemon 2>&1 | tee build.log
+      - name: Report compile errors as annotations
+        if: failure()
+        run: |
+          grep -E -A3 '(error:|e: |FAILURE|What went wrong)' build.log | head -400 > errors.txt || true
+          msg=$(sed -e 's/%/%25/g' errors.txt | awk '{printf "%s%%0A", $0}')
+          echo "::error title=Build errors::${msg:0:60000}"
+      - name: In-game screenshots
+        id: shots
+        continue-on-error: true
+        timeout-minutes: 25
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          set -o pipefail
+          sudo apt-get install -y -q xvfb mesa-utils libgl1-mesa-dri > /dev/null 2>&1 || true
+          xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest --no-daemon 2>&1 | tee gametest.log
+      - name: Report game errors as annotations
+        if: always()
+        run: |
+          grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
+          msg=$(sed -e 's/%/%25/g' gerrors.txt | awk '{printf "%s%%0A", $0}')
+          [ -s gerrors.txt ] && echo "::warning title=Game log::${msg:0:60000}" || true
+      - name: Save jar and screenshots to the ci-out branch
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/out/screenshots
+          cp build/libs/*.jar /tmp/out/ 2>/dev/null || true
+          find . -path ./node_modules -prune -o -name '*.png' -path '*screenshots*' -print -exec cp {} /tmp/out/screenshots/ \; || true
+          cp gametest.log /tmp/out/ 2>/dev/null || true
+          cd /tmp/out
+          git init -q -b ci-out
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Build of ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ci-out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bong-inspect
+          path: build/libs/*.jar
