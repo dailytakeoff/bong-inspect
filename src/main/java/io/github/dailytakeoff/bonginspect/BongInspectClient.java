@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Client-only entry point. Registers the keybinds (changeable in Options > Controls > Key Binds,
- * under "Bong Inspect") and drives the animation and the creeper scares every client tick.
+ * Client-only entry point. Registers two keybinds (changeable in Options > Controls > Key Binds,
+ * under "Bong Inspect") and drives the animation every client tick.
  */
 public final class BongInspectClient implements ClientModInitializer {
 	public static final String MOD_ID = "bonginspect";
@@ -23,7 +23,6 @@ public final class BongInspectClient implements ClientModInitializer {
 
 	public static KeyMapping hitKey;
 	public static KeyMapping inspectKey;
-	public static KeyMapping creeperKey;
 
 	@Override
 	public void onInitializeClient() {
@@ -31,14 +30,12 @@ public final class BongInspectClient implements ClientModInitializer {
 				"key.bonginspect.hit", InputConstants.Type.KEYBOARD, SDLScancode.SDL_SCANCODE_G, CATEGORY));
 		inspectKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
 				"key.bonginspect.inspect", InputConstants.Type.KEYBOARD, SDLScancode.SDL_SCANCODE_H, CATEGORY));
-		creeperKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-				"key.bonginspect.creeper", InputConstants.Type.KEYBOARD, SDLScancode.SDL_SCANCODE_J, CATEGORY));
 
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> {
 			while (hitKey.consumeClick()) {
 				if (mc.player != null && mc.gui.screen() == null) {
 					if (!BongAnimation.active()) {
-						CreeperScare.afterHit();
+						Ambience.afterHit();
 					}
 					BongAnimation.start(BongAnimation.Mode.HIT);
 				}
@@ -48,13 +45,8 @@ public final class BongInspectClient implements ClientModInitializer {
 					BongAnimation.start(BongAnimation.Mode.INSPECT);
 				}
 			}
-			while (creeperKey.consumeClick()) {
-				if (mc.player != null && mc.gui.screen() == null) {
-					CreeperScare.now();
-				}
-			}
 			BongAnimation.tick(mc);
-			CreeperScare.tick(mc);
+			Ambience.tick(mc);
 		});
 	}
 }

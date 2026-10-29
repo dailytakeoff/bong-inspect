@@ -3,7 +3,7 @@
 	"id": "bonginspect",
 	"version": "${version}",
 	"name": "Bong Inspect",
-	"description": "Client-side CS:GO-style inspect animation: take a hit from a glass bong, blow out campfire smoke, then inspect it. Every so often a creeper sneaks up behind you and starts hissing (it never explodes). Keybinds are changeable under Options > Controls > Key Binds.",
+	"description": "Client-side CS:GO-style inspect animation: take a hit from a glass bong, blow out campfire smoke, then inspect it. Keybinds are changeable under Options > Controls > Key Binds.",
 	"authors": ["dailytakeoff"],
 	"license": "MIT",
 	"contact": {

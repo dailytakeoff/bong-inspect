@@ -22,8 +22,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * A few footsteps from behind, then the fuse hiss, and a fake creeper (it only exists on this
  * screen) standing there swelling and flashing. Right when it would blow, it fizzles out in a
  * puff of smoke. Nothing explodes, nothing gets hurt, and other players don't see or hear it.
+ *
+ * Hidden on purpose: no keybind, nothing in the controls, description or README.
  */
-public final class CreeperScare {
+public final class Ambience {
 	/** Random scares: one every 4 to 12 minutes of play. */
 	private static final int MIN_GAP = 4 * 60 * 20;
 	private static final int MAX_GAP = 12 * 60 * 20;
@@ -53,14 +55,14 @@ public final class CreeperScare {
 	private static Creeper fake;
 	private static ClientLevel fakeLevel;
 
-	private CreeperScare() {
+	private Ambience() {
 	}
 
 	public static boolean active() {
 		return age >= 0;
 	}
 
-	/** Start a scare on the next tick (the keybind). */
+	/** Start a scare on the next tick (only used by the screenshot test; there's no key for it). */
 	public static void now() {
 		if (!active()) {
 			countdown = 0;
