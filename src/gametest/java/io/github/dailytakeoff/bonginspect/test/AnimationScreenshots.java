@@ -2,6 +2,7 @@ package io.github.dailytakeoff.bonginspect.test;
 
 import io.github.dailytakeoff.bonginspect.BongAnimation;
 import io.github.dailytakeoff.bonginspect.BongInspectClient;
+import io.github.dailytakeoff.bonginspect.CreeperScare;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
@@ -59,6 +60,29 @@ public class AnimationScreenshots implements FabricClientGameTest {
 			ctx.runOnClient(mc -> BongAnimation.start(BongAnimation.Mode.HIT));
 			ctx.waitTicks(66);
 			ctx.takeScreenshot("third_person_smoke");
+			ctx.waitTicks(80);
+
+			// creeper scare: it sneaks up behind (the player faces north, so it stands to the south),
+			// then the player turns around to look at it swelling
+			ctx.runOnClient(mc -> mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON));
+			ctx.runOnClient(mc -> CreeperScare.now());
+			ctx.waitTicks(2);
+			ctx.runOnClient(mc -> BongInspectClient.LOGGER.info("CREEPER started: {}", CreeperScare.debugState()));
+			ctx.waitTicks(28);
+			ctx.runOnClient(mc -> {
+				mc.player.setYRot(0);
+				mc.player.setXRot(10);
+			});
+			ctx.waitTicks(4);
+			ctx.runOnClient(mc -> BongInspectClient.LOGGER.info("CREEPER hissing: {}", CreeperScare.debugState()));
+			ctx.takeScreenshot("creeper_1_turned_around");
+			ctx.waitTicks(14);
+			ctx.takeScreenshot("creeper_2_swelling");
+			ctx.waitTicks(6);
+			ctx.takeScreenshot("creeper_3_about_to_blow");
+			ctx.waitTicks(5);
+			ctx.runOnClient(mc -> BongInspectClient.LOGGER.info("CREEPER after: {}", CreeperScare.debugState()));
+			ctx.takeScreenshot("creeper_4_fizzled");
 		}
 	}
 }

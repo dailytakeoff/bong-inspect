@@ -48,9 +48,23 @@ jobs:
       - name: Report game errors as annotations
         if: always()
         run: |
-          grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:|SHOT at|OpenGL renderer|OpenGL core profile version|direct rendering|Loaded bong)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
+          grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:|SHOT at|CREEPER|OpenGL renderer|OpenGL core profile version|direct rendering|Loaded bong)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
           msg=$(sed -e 's/%/%25/g' gerrors.txt | awk '{printf "%s%%0A", $0}')
           [ -s gerrors.txt ] && echo "::warning title=Game log::${msg:0:60000}" || true
+      - name: API dump (temporary)
+        if: always()
+        run: |
+          JARS=$(find ~/.gradle/caches .gradle -name '*.jar' -path '*minecraft*' 2>/dev/null | grep -v -e sources -e fabric-api -e fabric-loader | sort -u)
+          { echo "JARS:"; echo "$JARS"; } > api.txt
+          CP=$(echo "$JARS" | tr '\n' ':')
+          for j in $JARS; do unzip -l "$j" 2>/dev/null | grep -i -E 'Creeper[^/]*\.class|/ClientLevel\.class|/SoundType\.class' ; done | sort -u >> api.txt
+          for c in net.minecraft.world.entity.monster.Creeper net.minecraft.client.multiplayer.ClientLevel net.minecraft.world.entity.Entity \
+                   net.minecraft.world.entity.LivingEntity net.minecraft.world.level.block.SoundType net.minecraft.world.phys.shapes.VoxelShape \
+                   'net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase' net.minecraft.world.entity.EntityType net.minecraft.core.BlockPos; do
+            echo "=== $c" >> api.txt
+            javap -cp "$CP" "$c" >> api.txt 2>&1 || true
+          done
+          wc -l api.txt
       - name: Save jar and screenshots to the ci-out branch
         if: always() && github.event_name != 'pull_request'
         run: |
@@ -58,13 +72,17 @@ jobs:
           cp build/libs/*.jar /tmp/out/ 2>/dev/null || true
           find . -path ./node_modules -prune -o -name '*.png' -path '*screenshots*' -print -exec cp {} /tmp/out/screenshots/ \; || true
           cp gametest.log /tmp/out/ 2>/dev/null || true
+          cp api.txt /tmp/out/ 2>/dev/null || true
+          # main's builds go to ci-out; other branches to ci-out-<branch>, so they don't overwrite main's jar
+          BR=ci-out
+          [ "${GITHUB_REF_NAME}" != main ] && BR="ci-out-${GITHUB_REF_NAME//\//-}"
           cd /tmp/out
-          git init -q -b ci-out
+          git init -q -b "$BR"
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
           git add -A
           git commit -q -m "Build of ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ci-out
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" "$BR"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
