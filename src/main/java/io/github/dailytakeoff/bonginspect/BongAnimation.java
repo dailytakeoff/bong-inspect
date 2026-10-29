@@ -28,12 +28,12 @@ public final class BongAnimation {
 	/** Height of the bong in hand space. */
 	public static final float HEIGHT = 0.85f;
 	/** Where the mouthpiece ends up: just under the eyes, a little in front of the face. */
-	private static final Vector3f MOUTH_TIP = new Vector3f(0.0f, -0.17f, -0.13f);
+	private static final Vector3f MOUTH_TIP = new Vector3f(0.0f, -0.13f, -0.12f);
 
 	// poses: centre (x, y, z), pitch (top toward camera), roll (top leans left), spin (around its own axis)
 	static final Pose HIDDEN = new Pose(0.62f, -1.25f, -0.95f, -18, 28, 35);
 	static final Pose READY = new Pose(0.40f, -0.24f, -1.0f, 8, 10, 35);
-	static final Pose MOUTH = mouthPose(66, 9, -35);
+	static final Pose MOUTH = mouthPose(79, 20, -35);
 	// inspect: brought a bit closer and toward the middle of the screen
 	private static final Vector3f INSPECT_SHIFT = new Vector3f(-0.15f, 0.07f, 0.13f);
 

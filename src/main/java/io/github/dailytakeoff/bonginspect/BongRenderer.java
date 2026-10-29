@@ -66,7 +66,7 @@ public final class BongRenderer {
 
 		ps.pushPose();
 		ps.translate(pose.x(), pose.y(), pose.z());
-		ps.mulPose(pose.rotation());
+		ps.mulPose(new Matrix4f().rotation(pose.rotation()));
 		ps.scale(BongAnimation.HEIGHT, BongAnimation.HEIGHT, BongAnimation.HEIGHT);
 		ps.translate(0, -0.5f, 0);
 		collector.submitCustomGeometry(ps, RenderTypes.entityTranslucent(GLASS), (p, buf) -> mesh.emit(p, buf, light, f));
