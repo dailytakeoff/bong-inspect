@@ -26,20 +26,29 @@ jobs:
           grep -E -A3 '(error:|e: |FAILURE|What went wrong)' build.log | head -400 > errors.txt || true
           msg=$(sed -e 's/%/%25/g' errors.txt | awk '{printf "%s%%0A", $0}')
           echo "::error title=Build errors::${msg:0:60000}"
+      - name: Install software OpenGL (Mesa llvmpipe) and a virtual screen
+        timeout-minutes: 8
+        run: |
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update -q
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install -y -q --no-install-recommends \
+            xvfb xauth mesa-utils libgl1 libglx-mesa0 libgl1-mesa-dri libegl1 libegl-mesa0 libvulkan1 mesa-vulkan-drivers
       - name: In-game screenshots
         id: shots
         continue-on-error: true
-        timeout-minutes: 25
+        timeout-minutes: 22
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: llvmpipe
+          SDL_VIDEO_DRIVER: x11
         run: |
           set -o pipefail
-          sudo apt-get install -y -q xvfb mesa-utils libgl1-mesa-dri > /dev/null 2>&1 || true
-          xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClientGameTest --no-daemon 2>&1 | tee gametest.log
+          XARGS="-screen 0 1280x720x24 +extension GLX +render -noreset"
+          xvfb-run -a -s "$XARGS" glxinfo -B 2>&1 | tee gametest.log || true
+          timeout 20m xvfb-run -a -s "$XARGS" ./gradlew runClientGameTest --no-daemon 2>&1 | tee -a gametest.log
       - name: Report game errors as annotations
         if: always()
         run: |
-          grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
+          grep -E -B2 -A12 '(Exception|ERROR|FAILED|Caused by|KEYS:|OpenGL renderer|OpenGL core profile version|direct rendering|Loaded bong)' gametest.log 2>/dev/null | head -300 > gerrors.txt || true
           msg=$(sed -e 's/%/%25/g' gerrors.txt | awk '{printf "%s%%0A", $0}')
           [ -s gerrors.txt ] && echo "::warning title=Game log::${msg:0:60000}" || true
       - name: Save jar and screenshots to the ci-out branch
